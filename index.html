@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FPV Airspace Control — Ordu</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffffff'/%3E%3Cpath d='M32 9L40 28L54 33L40 38L32 55L24 38L10 33L24 28Z' stroke='%233b5265' fill='none' stroke-width='4'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.146/Build/Cesium/Widgets/widgets.css" />
+  <link rel="stylesheet" href="./style.css" /><link rel="stylesheet" href="./refine.css" />
+</head>
+<body>
+<div id="app">
+  <header class="toolbar">
+    <div class="brand"><div><strong>FPV Airspace Control</strong><span class="version-mark">v0.8.1</span></div></div>
+    <div class="toolbar-actions">
+      
+      <button id="loadBtn" class="btn primary" title="BFL, BBL, GPX, CSV, JSON uçuş kaydı yükle ">＋ <span>Uçuş aç</span></button>
+      <button id="cameraSettingsBtn" class="btn" title="FPV kamera parametreleri">◉ <span>Kamera ayarları</span></button>
+      <button id="settingsBtn" class="btn" title="Harita servislerini yapılandır">⚙ <span>Harita ayarları</span></button>
+    </div>
+  </header>
+  <main class="workspace">
+    <section class="center">
+      <div class="map-panel">
+        <div id="cesiumContainer" aria-label="Altınordu üç boyutlu harita"></div>
+        <div id="fpvLookLayer" class="fpv-look-layer" aria-label="Kamera bakışı: sürükle" hidden></div>
+        <div id="mapLoading" class="map-loading">
+          
+          <strong>Harita yükleniyor</strong>
+          <span id="mapLoadingMessage"></span>
+          <button id="retryMap" class="btn" hidden>Yeniden dene</button>
+        </div>
+        <div class="map-tools" role="group" aria-label="Harita kontrolleri">
+          <button id="homeBtn" class="map-icon" title="Altınordu merkezine dön">⌂</button>
+          <button id="modeBtn" class="map-icon" title="2D / 3D değiştir">3D</button>
+          <button id="followBtn" class="map-icon" title="Seçili aracı takip et">◎</button><button id="fpvBtn" class="map-icon" title="FPV / birinci şahıs görünüm">▣</button><button id="freeCamBtn" class="map-icon" title="Serbest kamera">✥</button>
+          <div class="tool-separator"></div>
+          <button id="trailsBtn" class="map-icon active" title="Uçuş izlerini göster/gizle">⌁</button>
+          <button id="fovBtn" class="map-icon active" title="Görüş konilerini göster/gizle">◁</button>
+        </div>
+        <div id="hudOverlay" class="hud-overlay" hidden aria-label="Uçuş HUD">
+<div class="hud-top"><span id="hudName">FPV-01</span><span id="hudCameraMode">FPV</span><button id="hudCamSettings" type="button" title="FPV kamera ayarları">⚙ Kamera</button><button id="hudLookReset" type="button" title="Bakış açısını sıfırla">↺ Bakış</button><button id="hudExit" type="button" title="FPV görünümden çık">✕ Çıkış</button></div>
+<div class="hud-compass"><span id="hudCompass">TRACK —</span><span id="hudYaw">YAW —</span></div>
+<div class="hud-left"><div class="hud-label">GPS SPEED</div><strong id="hudSpeed">—</strong><span>km/h</span><div class="hud-secondary" id="hudThrottle">THR —</div></div>
+<div class="hud-right"><div class="hud-label" id="hudAltLabel">GPS ALT</div><strong id="hudAlt">—</strong><span>m</span><div class="hud-secondary" id="hudVoltage">VBAT —</div></div>
+<div class="hud-reticle"><div class="hud-horizon" id="hudHorizon"><div class="hud-horizon-line"></div><div class="hud-degree-lines">−20° &nbsp; −10° &nbsp; 0° &nbsp; +10° &nbsp; +20°</div></div><div class="hud-center"><span class="ret-left"></span><span class="ret-dot"></span><span class="ret-right"></span></div></div>
+<div class="hud-bottom"><span id="hudRoll">ROLL —</span><span id="hudPitch">PITCH —</span><span id="hudFix">GPS —</span><span id="hudTime">00:00</span></div>
+</div>
+<div id="noGpsCockpit" class="no-gps-cockpit" hidden><div id="instrumentHorizon" class="instrument-horizon"><div class="instrument-sky"></div><div class="instrument-ground"></div></div><div class="no-gps-message"><strong>Konum yok</strong></div></div>
+
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      </div>
+      <section class="playback-panel" aria-label="Uçuş zaman çizelgesi" hidden>
+        <div class="playback-top"><div class="panel-title"><strong>Uçuş oynatma</strong><span id="flightName">—</span></div><div class="playback-actions"><button id="restartBtn" class="icon-btn" title="Başlangıca dön">↺</button><button id="playBtn" class="btn play">Ⅱ Duraklat</button><select id="speedSelect" aria-label="Oynatma hızı"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div></div>
+        <div class="timeline"><span id="currentTime">00:00</span><input id="timeSlider" type="range" min="0" max="180" step="0.1" value="0" aria-label="Zaman çizelgesi"/><span id="endTime">03:00</span></div>
+        
+      </section>
+    </section>
+    <aside class="sidebar">
+      <div class="side-heading"><div><h2>Araçlar</h2><span id="aircraftCount">0 araç</span></div></div>
+      <div id="aircraftList" class="aircraft-list"><span class="empty-state">Uçuş kaydı açın</span></div>
+      <div class="divider"></div>
+      <div class="detail-head"><h2>Seçili araç</h2><span id="selectedType">—</span></div>
+      <div id="selectedInfo" class="details"></div>
+      <div class="session-controls"><div class="session-row"><button id="sidebarFpv" class="btn" title="Birinci şahıs">FPV</button><button id="sidebarMap" class="btn" title="Serbest kamera">Harita</button></div></div><div class="sidebar-spacer"></div>
+      
+    </aside>
+  </main>
+</div>
+<input id="fileInput" type="file" accept=".gpx,.csv,.json,.geojson,.bbl,.bfl,.txt" hidden />
+<dialog id="settingsDialog" aria-label="Harita ayarları"><form method="dialog" class="settings-card"><div class="dialog-title"><h2>Harita ayarları</h2><button class="icon-btn" value="cancel" aria-label="Kapat">✕</button></div><label for="ionToken">Cesium ion access token</label><input id="ionToken" type="password" autocomplete="off" placeholder="eyJ..."/><label class="toggle-row"><input id="imageryCheck" type="checkbox"/> <span>Uydu görüntüsü</span></label><label class="toggle-row"><input id="terrainCheck" type="checkbox"/> <span>Arazi</span></label><label class="toggle-row"><input id="buildingsCheck" type="checkbox"/> <span>3D binalar</span></label><label for="qualitySelect" style="margin-top:13px">Görüntü ayrıntısı</label><select id="qualitySelect" aria-label="Görüntü ayrıntısı" style="width:100%;min-height:34px;border:1px solid #c7d2df;background:white;padding:7px 10px;border-radius:5px;color:#273b50"><option value="balanced">Dengeli</option><option value="high">Yüksek</option><option value="ultra">Ultra</option></select><label for="localTilesAsset">3D Tiles asset ID</label><input id="localTilesAsset" type="number" min="1" step="1" placeholder="Cesium ion 3D Tiles asset ID"/><label for="flightAltOffset" style="margin-top:15px">İrtifa ofseti (m)</label><input id="flightAltOffset" type="number" step="0.1" value="0" placeholder="0"/><label for="blackboxAltScale" style="margin-top:10px">BFL irtifa ölçeği</label><select id="blackboxAltScale" class="settings-select"><option value="10">10×</option><option value="1">1×</option><option value="0.1">0.1×</option></select><div class="settings-subhead">Uçuş izi</div>
+<div class="trail-options">
+  <label for="trailMode">Geçmiş</label>
+  <select id="trailMode" class="settings-select"><option value="all">Tamamı</option><option value="limited">Son N saniye</option></select>
+  <label for="trailSeconds">Süre (sn)</label>
+  <input id="trailSeconds" type="number" min="1" max="7200" step="1" value="120" />
+</div>
+<div class="dialog-actions"><button class="btn" value="cancel">Vazgeç</button><button class="btn primary" id="saveSettings" value="save">Kaydet</button></div></form></dialog>
+
+<dialog id="cameraDialog" aria-label="FPV kamera ayarları"><form method="dialog" class="settings-card">
+  <div class="dialog-title"><h2>FPV kamera ayarları</h2><button class="icon-btn" value="cancel" aria-label="Kapat">✕</button></div>
+  
+  <label for="cameraHeadingSource">Yatay bakış yönü</label><select id="cameraHeadingSource" class="settings-select"><option value="track">GPS track (hareket yönü)</option><option value="yaw">IMU yaw (varsa; yoksa GPS track)</option></select>
+  <div class="camera-grid">
+    <label>Attitude verisi<select id="cameraAttitudeMode" class="settings-select"><option value="fused">Gyro + ACC</option><option value="acc">ACC</option></select></label>
+    <label>Stabilizasyon<select id="cameraStabilization" class="settings-select"><option value="off">Kapalı</option><option value="light">Hafif</option><option value="balanced">Dengeli</option><option value="smooth">Yüksek</option></select></label>
+    <label>Yaw ofseti (°)<input id="cameraYawOffset" type="number" step="0.00001" min="-180" max="180" value="0"></label>
+    <label>Pitch ofseti (°)<input id="cameraPitchOffset" type="number" step="0.00001" min="-89" max="89" value="0"></label>
+    <label>Roll ofseti (°)<input id="cameraRollOffset" type="number" step="0.00001" min="-180" max="180" value="0"></label>
+    <label>Yatay FOV (°) <input id="cameraFov" type="number" step="0.01" min="35" max="125" value="95"></label>
+    <label>Öne (m)<input id="cameraForward" type="number" step="0.00001" min="-5" max="5" value="0.7"></label>
+    <label>Sağa (m)<input id="cameraRight" type="number" step="0.00001" min="-5" max="5" value="0"></label>
+    <label>Yukarı (m)<input id="cameraUp" type="number" step="0.00001" min="-5" max="5" value="0"></label>
+  </div>
+  <label class="toggle-row"><input id="cameraFollowPitch" type="checkbox"><span>Pitch takibi</span></label>
+  <label class="toggle-row"><input id="cameraFollowRoll" type="checkbox"><span>Roll takibi</span></label>
+  
+  <div class="dialog-actions"><button class="btn" id="cameraReset" type="button">Varsayılana sıfırla</button><button class="btn" value="cancel">Vazgeç</button><button class="btn primary" value="save">Kaydet</button></div>
+</form></dialog>
+
+<script defer src="https://cesium.com/downloads/cesiumjs/releases/1.146/Build/Cesium/Cesium.js"></script>
+<script defer src="./app.js?v=0.8.1"></script>
+</body>
+</html>

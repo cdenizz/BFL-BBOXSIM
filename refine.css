@@ -1,0 +1,57 @@
+
+/* v0.7: restrained desktop tool, no gradient panels or decorative copy */
+body{font-family:Segoe UI,Arial,system-ui,sans-serif !important;color:#263544!important}
+.toolbar{box-shadow:none!important}
+.brand-symbol,.load-symbol{display:none!important}
+.brand small{font-size:11px;color:#7b8794!important}
+.brand strong{font-size:14px;letter-spacing:0!important}
+.btn{box-shadow:none!important;transition:background-color .12s,border-color .12s!important}
+.map-badge{opacity:.88;box-shadow:none!important}
+.map-tools,.hud-top,.playback-panel,.sidebar{box-shadow:none!important}
+.sidebar .divider{opacity:.45}
+.side-notes,.source-warnings:empty,.settings-info:empty,.detail-section,.map-hint{display:none!important}
+.settings-card p{display:none!important}
+.settings-card{max-height:min(90vh,820px);overflow:auto}
+.settings-card label{color:#3d5060!important}
+.settings-select,.camera-grid input{border-radius:4px!important}
+.camera-grid{row-gap:9px!important}
+.statusbar{font-size:11px!important;color:#718090!important}
+.map-loading{background:#f9fafb!important}
+.hud-overlay{pointer-events:none}.hud-overlay button{pointer-events:auto}
+
+/* v0.8.0: file-first, neutral desktop UI. */
+.brand small,.source-tag,.map-badge,.event-line,.statusbar,.source-warnings,.side-notes,.no-gps-message span {display:none!important}
+.toolbar{height:49px!important;min-height:49px!important;padding:0 15px!important}
+.brand strong{font-weight:600!important;font-size:13px!important}
+.toolbar-actions{gap:6px!important}
+.btn{border-radius:3px!important;font-weight:500!important}
+.btn.primary{background:#315c81!important}
+.sidebar{padding:15px 13px!important;width:285px!important}
+.aircraft-list{margin-top:12px!important}
+.empty-state{display:block;padding:18px 5px;color:#8a94a0;font-size:12px}
+.playback-panel{height:95px!important;min-height:95px!important;padding:12px 16px!important}
+.playback-panel[hidden]{display:none!important}
+.playback-top{margin-bottom:7px}
+.map-icon,.aircraft-card{border-radius:3px!important}
+.dialog-title h2{font-size:15px!important}
+.settings-card{padding:18px 20px!important}
+.settings-subhead{border-top:1px solid #e4e7eb;padding-top:13px;margin-top:12px;font-size:12px;font-weight:650}
+.trail-options{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin:10px 0}
+.trail-options label{font-size:11px;color:#52606a}
+.trail-options select,.trail-options input{width:100%;min-height:34px;border:1px solid #cbd5de;border-radius:3px;padding:5px 7px;background:white;color:#273b50;font-size:12px}
+.trail-options input:disabled{opacity:.5}
+#cesiumContainer.fpv-pointer{cursor:crosshair}
+#hudCameraMode{display:none!important}
+#hudOverlay .hud-top{background:#1b2a3570!important}
+@media(max-width:680px){.sidebar{width:100%!important}}
+
+body:not(.has-flight) .detail-head,body:not(.has-flight) .details,body:not(.has-flight) .sidebar .divider,body:not(.has-flight) .session-controls{display:none!important}
+
+.version-mark{color:#9ca5ae;font-size:10px;font-weight:400;margin-left:4px}
+
+/* v0.8.1: no Pointer Lock. FPV view rotates via deliberate drag. */
+.fpv-look-layer{position:absolute;inset:0;z-index:4;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.fpv-look-layer[hidden]{display:none!important}
+.fpv-look-layer.dragging{cursor:grabbing}
+.map-tools{z-index:6}
+.no-gps-cockpit{pointer-events:none}
